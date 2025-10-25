@@ -1,0 +1,17 @@
+feeds:
+  cves:
+    - name: NVD Full Archive
+      type: json
+      url_template: "nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{year}.json.zip"
+      start_year: 2002
+      schedule: "init"
+
+    - name: NVD Recent
+      type: json
+      url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-recent.json.gz"
+      schedule: "2_hours"
+
+    - name: NVD Modified
+      type: json
+      url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-modified.json.gz"
+      schedule: "2_hours"
