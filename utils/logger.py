@@ -1,11 +1,14 @@
 import os
 import datetime
+from typing import Optional
 
 class Logger:
-    _instance = None
+    _instance: Optional["Logger"] = None
+    _level: int = 3
+    _log_file: Optional[str] = None
     LEVELS = {"NONE": 0, "ERROR": 1, "WARN": 2, "INFO": 3, "DEBUG": 4}
 
-    def __new__(cls, level="INFO", log_file=None):
+    def __new__(cls, level="INFO", log_file = None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._level = cls.LEVELS.get(level.upper(), 3)

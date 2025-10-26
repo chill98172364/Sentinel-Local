@@ -1,17 +1,81 @@
-feeds:
-  cves:
-    - name: NVD Full Archive
-      type: json
-      url_template: "nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{year}.json.zip"
-      start_year: 2002
-      schedule: "init"
+# ============================================================
+# Sentinel Local — Feed and Source Configuration
+# ============================================================
+# This file defines all data ingestion sources for Sentinel Local.
+# Each feed entry contains:
+#   name:        Display name for logging and monitoring
+#   type:        Type of data source (json, rss, api)
+#   url / url_template:  Direct URL or yearly template
+#   schedule:    How often to fetch new data
+#   start_year:  (Optional) First year for historical sync
+#   category:    (Optional) Tag used by scraper modules
+# ============================================================
 
-    - name: NVD Recent
+feeds:
+  # ----------------------------------------------------------
+  # CVE Feeds — National Vulnerability Database (NVD)
+  # ----------------------------------------------------------
+  cves:
+    - name: "NVD Full Archive"
+      type: json
+      url_template: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{year}.json.zip"
+      start_year: 2002
+      schedule: "manual"           # Run only during first-time or full rebuild
+      description: "Complete CVE archive from 2002 to present"
+
+    # "...the 'recent' and 'modified' feeds are updated every two hours." - nvd.nist.gov/vuln/data-feeds
+    - name: "NVD Recent"
       type: json
       url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-recent.json.gz"
       schedule: "2_hours"
+      description: "Recently published CVEs (last 8 days)"
 
-    - name: NVD Modified
+    - name: "NVD Modified"
       type: json
       url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-modified.json.gz"
       schedule: "2_hours"
+      description: "Recently modified CVEs (last 8 days)"
+
+  # ----------------------------------------------------------
+  # Vendor Advisories — Official Security Notices
+  # ----------------------------------------------------------
+  advisories:
+    - name: "Microsoft Security Response Center (MSRC)"
+      type: rss
+      url: "https://api.msrc.microsoft.com/update-guide/rss"
+      schedule: "daily"
+      category: "vendor"
+
+    - name: "Ubuntu Security Notices"
+      type: rss
+      url: "https://ubuntu.com/security/notices/rss.xml"
+      schedule: "daily"
+      category: "vendor"
+
+    - name: "Red Hat Security / Blog"
+      type: rss
+      url: "https://www.redhat.com/en/rss/blog"
+      schedule: "daily"
+      category: "vendor"
+
+  # ----------------------------------------------------------
+  # News & Blog Feeds — Security Research and Announcements
+  # ----------------------------------------------------------
+  news:
+    - name: "Dark Reading"
+      type: rss
+      url: "https://www.darkreading.com/rss.xml"
+      schedule: "4_hours"
+      category: "media"
+
+    - name: "The Hacker News"
+      type: rss
+      url: "https://feeds.feedburner.com/TheHackersNews"
+      schedule: "4_hours"
+      category: "media"
+
+    - name: "Krebs on Security"
+      type: rss
+      url: "https://krebsonsecurity.com/feed/"
+      schedule: "4_hours"
+      category: "independent"

@@ -1,0 +1,24 @@
+# =======================================================
+# Sentinel Local - Index and Scraper Mapping Configuration
+# =======================================================
+# Each index defines:
+#   - path: relative import path to scraper modules
+#   - description: (optional) short explanation
+#   - schedule: how often to scrape (for your scheduler)
+# =======================================================
+
+indices:
+  cves:
+    path: "scraping.modules.cves"
+    description: "National Vulnerability Database, GHSA, etc."
+    schedule: "daily"
+
+  advisories:
+    path: "scraping.modules.advisories"
+    description: "Vendor advisories (RedHat, Debian, Ubuntu, etc.)"
+    schedule: "every_3_days"
+
+  news:
+    path: "scraping.modules.news"
+    description: "Security news and blog feeds (Krebs, DarkReading, etc.)"
+    schedule: "hourly"
