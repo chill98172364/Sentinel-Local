@@ -27,13 +27,13 @@ feeds:
     - name: "NVD Recent"
       type: json
       url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-recent.json.gz"
-      schedule: "2_hours"
+      schedule: "2"
       description: "Recently published CVEs (last 8 days)"
 
     - name: "NVD Modified"
       type: json
       url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-modified.json.gz"
-      schedule: "2_hours"
+      schedule: "2"
       description: "Recently modified CVEs (last 8 days)"
 
   # ----------------------------------------------------------
@@ -65,17 +65,17 @@ feeds:
     - name: "Dark Reading"
       type: rss
       url: "https://www.darkreading.com/rss.xml"
-      schedule: "4_hours"
+      schedule: "4"
       category: "media"
 
     - name: "The Hacker News"
       type: rss
       url: "https://feeds.feedburner.com/TheHackersNews"
-      schedule: "4_hours"
+      schedule: "4"
       category: "media"
 
     - name: "Krebs on Security"
       type: rss
       url: "https://krebsonsecurity.com/feed/"
-      schedule: "4_hours"
+      schedule: "4"
       category: "independent"
