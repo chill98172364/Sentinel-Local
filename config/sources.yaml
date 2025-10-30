@@ -20,20 +20,20 @@ feeds:
       type: json
       url_template: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{year}.json.zip"
       start_year: 2002
-      schedule: "manual"           # Run only during first-time or full rebuild
+      schedule: "none"           # Run only during first-time or full rebuild
       description: "Complete CVE archive from 2002 to present"
 
     # "...the 'recent' and 'modified' feeds are updated every two hours." - nvd.nist.gov/vuln/data-feeds
     - name: "NVD Recent"
       type: json
       url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-recent.json.gz"
-      schedule: "2"
+      schedule: "2_hours"
       description: "Recently published CVEs (last 8 days)"
 
     - name: "NVD Modified"
       type: json
       url: "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-modified.json.gz"
-      schedule: "2"
+      schedule: "2_hours"
       description: "Recently modified CVEs (last 8 days)"
 
   # ----------------------------------------------------------
@@ -43,19 +43,19 @@ feeds:
     - name: "Microsoft Security Response Center (MSRC)"
       type: rss
       url: "https://api.msrc.microsoft.com/update-guide/rss"
-      schedule: "daily"
+      schedule: "1_day"
       category: "vendor"
 
     - name: "Ubuntu Security Notices"
       type: rss
       url: "https://ubuntu.com/security/notices/rss.xml"
-      schedule: "daily"
+      schedule: "1_day"
       category: "vendor"
 
     - name: "Red Hat Security / Blog"
       type: rss
       url: "https://www.redhat.com/en/rss/blog"
-      schedule: "daily"
+      schedule: "1_day"
       category: "vendor"
 
   # ----------------------------------------------------------
@@ -65,17 +65,17 @@ feeds:
     - name: "Dark Reading"
       type: rss
       url: "https://www.darkreading.com/rss.xml"
-      schedule: "4"
+      schedule: "4_hours"
       category: "media"
 
     - name: "The Hacker News"
       type: rss
       url: "https://feeds.feedburner.com/TheHackersNews"
-      schedule: "4"
+      schedule: "4_hours"
       category: "media"
 
     - name: "Krebs on Security"
       type: rss
       url: "https://krebsonsecurity.com/feed/"
-      schedule: "4"
+      schedule: "4_hours"
       category: "independent"

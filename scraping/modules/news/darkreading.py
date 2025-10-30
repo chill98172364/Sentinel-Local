@@ -13,8 +13,10 @@ import cloudscraper
 from bs4 import BeautifulSoup
 from utils.utils import get_config
 from utils.logger import Logger
+from utils.utils import parse_interval
 
-log = Logger("DEBUG")
+log = Logger()
+config = get_config("news","Dark Reading")
 
 def __extract_contents(URL:str):
     ses = cloudscraper.CloudScraper()
@@ -31,10 +33,34 @@ def __extract_contents(URL:str):
     
     return content
 
+# FUNCTION __process_loop(config, scraper_func):
+#     interval_seconds = parse_interval(config["schedule"])
+
+#     LOOP FOREVER:
+#         LOG "Starting scrape"
+#         data = scraper_func()
+#         SAVE data to disk or Elasticsearch
+#         LOG "Completed scrape"
+
+#         LOG "Sleeping for interval_seconds"
+#         WAIT interval_seconds seconds
+
+
+def __process_loop():
+    # Remember to update scraping/run_history.json
+
+    interval_seconds = parse_interval(config["schedule"])
+
+    while True:
+        log.info("Scraping Dark Reading")
+        #data = 
+
+
+        time.sleep(interval_seconds)
+    
+
 def _extract_RSS():
-    config = get_config("news","Dark Reading")
     URL = config["url"]
-    scheule = config["schedule"]
     
     data = []
     feed = feedparser.parse(URL)
@@ -44,17 +70,27 @@ def _extract_RSS():
         content = __extract_contents(entry["link"])
         data.append(
             {
-                "title":entry["title"],         #["title"]
-                "description":entry["summary"], #["summary"]
-                "published":iso_date,           #["published_parsed"]
-                "author":entry["author"],       #["author"]
-                "url":entry["link"],            #["link"]
+                "title":entry["title"],
+                "description":entry["summary"],
+                "published":iso_date,
+                "author":entry["author"],
+                "url":entry["link"],
                 "content":content
             }
         )
         log.info(f'Parsed: {entry["title"]}')
-    
-    # TODO, start x hour loop (config/souces.yaml)
-    # Maybe it can be generalized and put into utils/utils.py
 
     return data
+
+# ==================================================================
+# Not sure where to add this logic but:                            #
+# 1. Store most recent news title                                  #
+# 2. Start loop, feed it the last title it scraped                 #
+# 3. After time.sleep(2_hours), get all the news articles after it #
+#                                                                  #
+# Can also store the pubDate                                       #
+# dont waste time scraping the contents if you dont need to        #
+# ==================================================================
+
+def main():
+    _extract_RSS()
