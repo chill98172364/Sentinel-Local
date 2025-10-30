@@ -10,7 +10,7 @@
 indices:
   cves:
     path: "scraping.modules.cves"
-    description: "National Vulnerability Database, GHSA, etc."
+    description: "National Vulnerability Database"
     schedule: "daily"
 
   advisories:

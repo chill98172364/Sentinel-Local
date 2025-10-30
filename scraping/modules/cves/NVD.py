@@ -14,7 +14,8 @@
 # if the date is under 8 days, then scrape new info and move on
 # if its longer than 8 days since scrape, re-scrape everything
 
-import requests, os, zipfile, json
+import requests, os, zipfile, json, yaml
+from pathlib import Path
 from urllib.parse import urlparse
 from datetime import datetime
 from utils.temp_manager import TempManager
@@ -22,18 +23,9 @@ from utils.logger import Logger
 from elasticsearch import Elasticsearch, helpers
 
 TmpMgr = TempManager()
+NVD_folder_path = TmpMgr.create_folder()
 log = Logger("DEBUG")
 es = Elasticsearch("http://localhost:9200") # TODO 2
-
-def _upload_to_ES(cve_list: list): # TODO 1
-    actions = [
-        {
-            "_index": "cves",
-            "_id": c["cve_id"],
-            "_source": c
-        } for c in cve_list if c
-    ]
-    helpers.bulk(es, actions)
 
 def __extract_ES_data(entry: dict) -> dict | None: # TODO 1
     cve_data = entry.get("cve", {})
@@ -47,7 +39,7 @@ def __extract_ES_data(entry: dict) -> dict | None: # TODO 1
         if _desc.get("lang") == "en":
             summary = _desc.get("value")
 
-    _metrics = cve_data.get("cve", {}).get("metrics")
+    _metrics = cve_data.get("metrics", {})
     cvss_data = {}
     # Use V3.1 If available
     if "cvssMetricV31" in _metrics:
@@ -56,7 +48,7 @@ def __extract_ES_data(entry: dict) -> dict | None: # TODO 1
             "version" : v3.get("version"),
             "base_score" : v3.get("baseScore"),
             "access_vector" : v3.get("attackVector"),
-            "exploitability_score" : _metrics["cvssMetricV31"][1].get("exploitabilityScore")
+            "exploitability_score" : _metrics["cvssMetricV31"][0].get("exploitabilityScore")
         }
     # Fallback to V2.0 (legacy)
     elif "cvssMetricV2" in _metrics:
@@ -64,8 +56,8 @@ def __extract_ES_data(entry: dict) -> dict | None: # TODO 1
         cvss_data = {
             "version" : v2.get("version"),
             "base_score" : v2.get("baseScore"),
-            "access_vector" : v2.get("attackVector"),
-            "exploitability_score" : _metrics["cvssMetricV2"][1].get("exploitabilityScore")
+            "access_vector" : v2.get("accessVector"),
+            "exploitability_score" : _metrics["cvssMetricV2"][0].get("exploitabilityScore")
         }
 
     return {
@@ -79,9 +71,19 @@ def __extract_ES_data(entry: dict) -> dict | None: # TODO 1
         "last_synced": datetime.utcnow().isoformat()
     }
 
+def _upload_to_ES(cve_list: list): # TODO 1
+    actions = [
+        {
+            "_index": "cves",
+            "_id": c["cve_id"],
+            "_source": c
+        } for c in cve_list if c
+    ]
+    helpers.bulk(es, actions)
+
 def _parse_files(path:str): # TODO 1,3
     # Go through all files in folder
-    es_data = {}
+    es_data = []
     for file in os.listdir(path):
         log.info(f"Processing file: {file}")
 
@@ -93,7 +95,7 @@ def _parse_files(path:str): # TODO 1,3
         
         for entry in js["vulnerabilities"]:
             formatted = __extract_ES_data(entry)
-            es_data # add to this somehow
+            es_data.append(formatted)
 
     return es_data
 
@@ -103,15 +105,52 @@ def _download_archive(URL):
     parsed_url = urlparse(URL)
     filename = os.path.basename(parsed_url.path)
     log.debug(f"filename: {filename}")
-    folder_path = TmpMgr.create_folder()
-    log.debug(f"folder_path: {folder_path}")
-    path = os.path.join(folder_path, filename)
+
+    NVD_folder_path = TmpMgr.create_folder()
+    log.debug(f"folder_path: {NVD_folder_path}")
+
+    path = os.path.join(NVD_folder_path, filename)
     log.debug(f"path: {path}")
+
     zip_path = TmpMgr.create_file_bytes(path, requests.get(URL).content)
     log.debug(f"zip_path: {zip_path}")
+
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(folder_path)
+        zip_ref.extractall(NVD_folder_path)
     
     os.remove(zip_path)
 
-    return folder_path
+    return NVD_folder_path
+
+def _init(): # TODO 5
+    iso_date = datetime.now()
+    config = ""
+    with open('config/sources.yaml', 'r') as file:
+        config = yaml.safe_load(file)
+
+    feeds = config["feeds"]
+    cve_feeds = feeds["cves"]
+    nvd_full = next(feed for feed in cve_feeds if feed["name"] == "NVD Full Archive")
+
+    for _year in range(nvd_full["start_year"],iso_date.year):
+        _download_archive(nvd_full["url_template"].format(year=_year))
+        log.debug(f"Extracted contents to: {NVD_folder_path}")
+
+    cve_list = _parse_files(NVD_folder_path)
+    log.info(f"Finished Processing all files in {NVD_folder_path}")
+
+    log.info("")
+    _upload_to_ES(cve_list)
+    log.info(f"Finished uploading all CVE's to elastic!")
+
+def _check_loop(url):
+    # Download URL
+    # Extract data
+    pass
+
+def main(init=False):
+    # Download entire CVE database
+    if init == True:
+        _init()
+    
+    # Start x hour loop (config/sources.yaml) 

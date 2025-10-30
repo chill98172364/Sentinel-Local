@@ -21,7 +21,6 @@ class TempManager:
         random_string = ''.join(random.choice(characters) for _ in range(length))
         return random_string
 
-
     def create_file(self, name, content=""):
         file_path = os.path.join(self.path, name)
         with open(file_path, "w", encoding="utf-8") as f:
