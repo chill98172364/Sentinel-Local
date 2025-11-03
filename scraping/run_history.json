@@ -1,10 +1,10 @@
 {
     "NVD" : "",
-    "DarkReading": "",
     "DSA" : "",
     "USA" : "",
-    "HackerNews" : "",
-    "KerbonSecurity" : "",
+    "darkReading": "",
+    "hackerNews" : "",
+    "kerbonSecurity" : "",
     "MSRC" : "",
-    "RedHat" : ""
+    "redHat" : ""
 }

@@ -1,7 +1,7 @@
-import yaml
-from pathlib import Path
 from utils.logger import Logger
-import elasticsearch
+import yaml, json, elasticsearch
+from pathlib import Path
+from datetime import datetime, timezone
 
 log = Logger()
 
@@ -19,7 +19,28 @@ def get_config(feed:str,name:str):
 
     return blog
 
-def CVE_to_ES(cve_list: list):
+# TODO 5
+def get_run_date(name:str) -> str:
+    """Returns the last run date of specific ......... given the name from scraping/run_history.json. returns: ISO format, name: camelCase """
+    run_history_path = Path("scraping/run_history.json")
+    with open(run_history_path, "r", encoding="utf-8") as f:
+        run_history = json.loads(f.read())
+    
+    return run_history[name]
+
+# TODO 5
+def update_run_date(name:str):
+    """Updates the run date (GMT) of specific ..... within scraping/run_history.json"""
+    run_history_path = Path("scraping/run_history.json")
+    with open(run_history_path, "r", encoding="utf-8") as f:
+        run_history = json.loads(f.read())
+    
+    current_gmt_time = datetime.now(timezone.utc)
+    iso_gmt_string = current_gmt_time.replace(microsecond=0).isoformat()
+
+    run_history[name] = iso_gmt_string
+
+def upload_CVE(cve_list: list):
     """Adds a CVE list to elastic search"""
     actions = [
         {
@@ -27,6 +48,17 @@ def CVE_to_ES(cve_list: list):
             "_id": c["cve_id"],
             "_source": c
         } for c in cve_list if c
+    ]
+    helpers.bulk(es, actions)
+
+def upload_RSS(rss_data):
+    """Uploads scraped RSS data to elastic search"""
+    actions = [
+        {
+            "_index": "news",
+            "_id": "darkReading",
+            "_source": r
+        } for r in rss_data if r
     ]
     helpers.bulk(es, actions)
 

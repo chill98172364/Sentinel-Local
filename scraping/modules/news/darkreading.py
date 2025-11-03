@@ -8,17 +8,16 @@
 
 # reaaaaalllyyyy similar to hackernews.py
 
+import utils.utils as utils
+from utils.logger import Logger
+
 import feedparser, time
 import cloudscraper
 from bs4 import BeautifulSoup
-from utils.utils import get_config
-from utils.logger import Logger
-from utils.utils import parse_interval
 
 log = Logger()
-config = get_config("news","Dark Reading")
 
-def __extract_contents(URL:str):
+def _extract_contents(URL:str):
     ses = cloudscraper.CloudScraper()
     r = ses.get(URL)
     parser = BeautifulSoup(r.text, 'html.parser')
@@ -33,6 +32,32 @@ def __extract_contents(URL:str):
     
     return content
 
+def _extract_RSS(URL, from_date):
+    """Extracts data from RSS field"""
+    data = []
+    feed = feedparser.parse(URL)
+    for entry in feed.entries:
+        _pub_obj = entry["published_parsed"]
+        pub_date = time.strftime("%Y-%m-%d", _pub_obj)
+        if pub_date < from_date:
+            log.debug(f"Skipping article (pub_date: {pub_date})")
+            continue
+
+        content = _extract_contents(entry["link"])
+        data.append(
+            {
+                "title":entry["title"],
+                "description":entry["summary"],
+                "published":pub_date,
+                "author":entry["author"],
+                "url":entry["link"],
+                "content":content
+            }
+        )
+        log.info(f'Parsed: {entry["title"]}')
+
+    return data
+
 # FUNCTION __process_loop(config, scraper_func):
 #     interval_seconds = parse_interval(config["schedule"])
 
@@ -45,42 +70,23 @@ def __extract_contents(URL:str):
 #         LOG "Sleeping for interval_seconds"
 #         WAIT interval_seconds seconds
 
+def _start_scrape():
+    config = utils.get_config("news","Dark Reading")
+    last_run = utils.get_run_date("darkReading")
 
-def __process_loop():
-    # Remember to update scraping/run_history.json
-
-    interval_seconds = parse_interval(config["schedule"])
+    interval_seconds = utils.parse_interval(config["schedule"])
 
     while True:
         log.info("Scraping Dark Reading")
-        #data = 
+        
+        rss_data = _extract_RSS()
+        utils.upload_RSS(rss_data)
 
 
+        utils.update_run_date("darkReading")
         time.sleep(interval_seconds)
     
 
-def _extract_RSS():
-    URL = config["url"]
-    
-    data = []
-    feed = feedparser.parse(URL)
-    for entry in feed.entries:
-        _pub_obj = entry["published_parsed"]
-        iso_date = time.strftime("%Y-%m-%d", _pub_obj)
-        content = __extract_contents(entry["link"])
-        data.append(
-            {
-                "title":entry["title"],
-                "description":entry["summary"],
-                "published":iso_date,
-                "author":entry["author"],
-                "url":entry["link"],
-                "content":content
-            }
-        )
-        log.info(f'Parsed: {entry["title"]}')
-
-    return data
 
 # ==================================================================
 # Not sure where to add this logic but:                            #
@@ -93,4 +99,4 @@ def _extract_RSS():
 # ==================================================================
 
 def main():
-    _extract_RSS()
+    _start_scrape()
