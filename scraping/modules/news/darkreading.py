@@ -37,9 +37,14 @@ def _extract_RSS(URL, from_date):
     data = []
     feed = feedparser.parse(URL)
     for entry in feed.entries:
+        if "darkreading.com/events" in entry["link"]:
+            log.debug("Skipping event")
+            continue
+
         _pub_obj = entry["published_parsed"]
         pub_date = time.strftime("%Y-%m-%d", _pub_obj)
-        if pub_date < from_date:
+
+        if from_date != None and pub_date < from_date:
             log.debug(f"Skipping article (pub_date: {pub_date})")
             continue
 
@@ -58,18 +63,6 @@ def _extract_RSS(URL, from_date):
 
     return data
 
-# FUNCTION __process_loop(config, scraper_func):
-#     interval_seconds = parse_interval(config["schedule"])
-
-#     LOOP FOREVER:
-#         LOG "Starting scrape"
-#         data = scraper_func()
-#         SAVE data to disk or Elasticsearch
-#         LOG "Completed scrape"
-
-#         LOG "Sleeping for interval_seconds"
-#         WAIT interval_seconds seconds
-
 def _start_scrape():
     config = utils.get_config("news","Dark Reading")
     last_run = utils.get_run_date("darkReading")
@@ -77,26 +70,14 @@ def _start_scrape():
     interval_seconds = utils.parse_interval(config["schedule"])
 
     while True:
-        log.info("Scraping Dark Reading")
+        log.info("Scraping Dark Reading...")
         
-        rss_data = _extract_RSS()
-        utils.upload_RSS(rss_data)
-
+        rss_data = _extract_RSS(config["url"], last_run)
+        utils.upload_RSS(rss_data) # Converted to saving to disk for debugging purposes
 
         utils.update_run_date("darkReading")
+        log.debug(f"Finished scraping Dark Reading, waiting {interval_seconds}s")
         time.sleep(interval_seconds)
-    
-
-
-# ==================================================================
-# Not sure where to add this logic but:                            #
-# 1. Store most recent news title                                  #
-# 2. Start loop, feed it the last title it scraped                 #
-# 3. After time.sleep(2_hours), get all the news articles after it #
-#                                                                  #
-# Can also store the pubDate                                       #
-# dont waste time scraping the contents if you dont need to        #
-# ==================================================================
 
 def main():
     _start_scrape()
