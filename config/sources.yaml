@@ -55,7 +55,7 @@ feeds:
       schedule: "1_day"
       category: "vendor"
 
-    - name: "Red Hat Security / Blog"
+    - name: "Red Hat Security"
       type: rss
       url: "https://www.redhat.com/en/rss/blog"
       schedule: "1_day"
