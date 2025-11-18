@@ -115,7 +115,7 @@ def upload_RSS(rss_data: list):
     """
     # Strictly for debugging purposes: save a snapshot so I can inspect it
     file_path = Path("tmp.json")
-    open(file_path, "w", encoding="utf-8").write(json.dumps(rss_data))
+    open(file_path, "w", encoding="utf-8").write(json.dumps(rss_data, indent=3))
     log.debug("Saved data to tmp.json in cwd")
 
     # The indexing logic is left in place but intentionally not executed

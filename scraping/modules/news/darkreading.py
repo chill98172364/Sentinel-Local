@@ -10,6 +10,7 @@
 
 import utils.utils as utils
 from utils.logger import Logger
+from utils.constants import AdvisorySource
 
 import feedparser, time
 import cloudscraper
@@ -28,7 +29,8 @@ def _extract_contents(URL:str):
         return "[Error scraping webpage]"
     content = ""
     for paragraph in div:
-        content = f"{content}\n{paragraph.text}"
+        if len(paragraph.text) > 5:
+            content = f"{content}\n{paragraph.text}"
     
     return content
 
@@ -64,8 +66,8 @@ def _extract_RSS(URL, from_date):
     return data
 
 def _start_scrape():
-    config = utils.get_config("news","Dark Reading")
-    last_run = utils.get_run_date("darkReading")
+    config = utils.get_config("news","Dark Reading") 
+    last_run = utils.get_run_date(AdvisorySource.DARK_READING.value)
 
     interval_seconds = utils.parse_interval(config["schedule"])
 
@@ -75,7 +77,7 @@ def _start_scrape():
         rss_data = _extract_RSS(config["url"], last_run)
         utils.upload_RSS(rss_data) # Converted to saving to disk for debugging purposes
 
-        utils.update_run_date("darkReading")
+        utils.update_run_date(AdvisorySource.DARK_READING.value)
         log.debug(f"Finished scraping Dark Reading, waiting {interval_seconds}s")
         time.sleep(interval_seconds)
 
