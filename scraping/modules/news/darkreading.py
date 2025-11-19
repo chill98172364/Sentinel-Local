@@ -18,20 +18,25 @@ from bs4 import BeautifulSoup
 
 log = Logger()
 
-def _extract_contents(URL:str):
+def _extract_info(URL:str):
     ses = cloudscraper.CloudScraper()
     r = ses.get(URL)
     parser = BeautifulSoup(r.text, 'html.parser')
-
-    div = parser.find("div", {"class": "ArticleBase-BodyContent ArticleBase-BodyContent_Article"})
-    if div == None:
-        log.error("Couldn't find paragraph DIV")
-        return "[Error scraping webpage]"
     content = ""
-    for paragraph in div:
-        if len(paragraph.text) > 5:
-            content = f"{content}\n{paragraph.text}"
+
+    # Scrape paragraphs
+    raw_content = parser.find("div", {"class": "ArticleBase-BodyContent ArticleBase-BodyContent_Article"})
+    if raw_content == None:
+        log.error("Couldn't find paragraph DIV")
+        content = "[Error scraping webpage]"
+    else:
+        for paragraph in raw_content:
+            if len(paragraph.text) > 5:
+                content = f"{content}\n{paragraph.text}"
     
+    # Author is properly defined withing RSS field
+    # Scraping from webpage would be redundant
+
     return content
 
 def _extract_RSS(URL, from_date):
@@ -50,7 +55,7 @@ def _extract_RSS(URL, from_date):
             log.debug(f"Skipping article (pub_date: {pub_date})")
             continue
 
-        content = _extract_contents(entry["link"])
+        content = _extract_info(entry["link"])
         data.append(
             {
                 "title":entry["title"],
